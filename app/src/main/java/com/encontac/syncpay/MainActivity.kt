@@ -8,10 +8,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,12 +34,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.encontac.syncpay.ui.theme.SyncPayTheme
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
-import kotlin.text.clear
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,26 +92,52 @@ fun LazyRowData(modifier: Modifier = Modifier){
             MyItem(item)
         }
     }
+
+
 }
 
 @Composable
 fun MyItem(usuario : Usuario ){
+
+    val db = Firebase.firestore
+    val formato = SimpleDateFormat("MMMM", Locale("es", "ES"))
+    val fechaServidor = remember { mutableStateOf<String?>(null) }
+
+    // Obtener fecha del servidor
+    LaunchedEffect(Unit) {
+        val tempDoc = db.collection("serverTime").document("temp")
+        tempDoc.set(mapOf("timestamp" to FieldValue.serverTimestamp()))
+            .addOnSuccessListener {
+                tempDoc.get()
+                    .addOnSuccessListener { document ->
+                        val timestamp = document.getTimestamp("timestamp")
+                        if (timestamp != null) {
+                            val serverDate = timestamp.toDate()
+                            fechaServidor.value = formato.format(serverDate) // Actualiza la fecha
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Error al leer la fecha del servidor", e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error al guardar el timestamp", e)
+            }
+    }
+
+    // Interfaz de usuario
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // Padding exterior (fuera de la sombra y el borde)
-            .shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp)) // Sombra
-            .background(Color.Transparent) // Fondo transparente para que se vea la sombra
-        // Borde
+            .padding(8.dp)
+            .shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp))
+            .background(Color.Transparent)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(8.dp)
-                ) // Color de fondo
-                .padding(16.dp), // Padding interior (dentro del borde)
+                .background(Color.White, RoundedCornerShape(8.dp))
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -122,13 +153,22 @@ fun MyItem(usuario : Usuario ){
                     .weight(0.6f)
                     .padding(start = 16.dp),
                 contentAlignment = Alignment.CenterStart
-            ) { // <-- Aquí se abre la lambda del contenido del Box
-                Column { // <-- Puedes usar una Column para organizar los textos
-                    Text(text = usuario.montoTotal.toString())
-                    Text(text = usuario.montoParcial.toString())
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = usuario.nombre.replaceFirstChar { it.uppercase() },
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF3D3D3D)
+                        )
+                        Text(text = "Acumulado : ${usuario.montoTotal}")
+                    }
+                    Text(text = "${fechaServidor.value ?: ""} : ${usuario.montoParcial}")
                 }
             }
-
         }
     }
 }
@@ -140,3 +180,4 @@ fun GreetingPreview() {
         LazyRowData()
     }
 }
+
