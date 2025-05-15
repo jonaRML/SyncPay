@@ -42,7 +42,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -166,7 +165,7 @@ fun MyItem(usuario : Usuario ){
                         )
                         Text(text = "Acumulado : ${usuario.montoTotal}")
                     }
-                    Text(text = "${fechaServidor.value ?: ""} : ${usuario.montoParcial}")
+                    Text(text = "${fechaActual() ?: ""} : ${usuario.montoParcial}")
                 }
             }
         }
