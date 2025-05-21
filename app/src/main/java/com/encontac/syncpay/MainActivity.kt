@@ -1,6 +1,7 @@
 package com.encontac.syncpay
 
 import android.content.ContentValues.TAG
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -8,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +49,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,11 +130,16 @@ fun MyItem(usuario : Usuario ){
                 Log.e(TAG, "Error al guardar el timestamp", e)
             }
     }
+    // el contexto local
+    val context = LocalContext.current
 
     // Interfaz de usuario
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { val intent = Intent(context, DescriptionActivity::class.java)
+                         context.startActivity(intent)
+            }
             .padding(8.dp)
             .shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp))
             .background(Color.Transparent)
@@ -149,13 +161,13 @@ fun MyItem(usuario : Usuario ){
             )
             Box(
                 modifier = Modifier
-                    .weight(0.6f)
+                    .weight(0.7f)
                     .padding(start = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Column {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
@@ -163,10 +175,19 @@ fun MyItem(usuario : Usuario ){
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF3D3D3D)
                         )
-                        Text(text = "Acumulado : ${usuario.montoTotal}")
+
                     }
-                    Text(text = "${fechaActual() ?: ""} : ${usuario.montoParcial}")
+                    Text(text = "Acumulado : ${usuario.montoTotal}", fontWeight = FontWeight.Bold , color = Color(0xFF727171))
+                    Text(text = "${fechaActual() ?: ""} : ${usuario.montoParcial}", fontWeight = FontWeight.Bold,  color = Color(0xFF727171))
                 }
+            }
+            FloatingActionButton(
+                onClick = { /* acción aquí */ },
+                containerColor = Color(0xFF4CAF50),
+                contentColor = Color.White,
+                modifier = Modifier.size(45.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar")
             }
         }
     }
